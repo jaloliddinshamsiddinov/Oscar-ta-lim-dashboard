@@ -1,17 +1,20 @@
 // src/App.jsx
-
 import { useEffect, useState } from 'react';
-import './index.css'; // Tailwind CSS stillarini import qilish
+// import './index.css'; // Bu fayl bo'sh bo'lishi mumkin, stillarni to'g'ridan-to'g'ri yozamiz
 
 // ====================================================================
 // YORDAMCHI KOMPONENTLAR
 // ====================================================================
 
 const LoadingSpinner = () => (
-    <svg className="animate-spin h-8 w-8 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
+    <div style={{
+        border: '4px solid rgba(255, 255, 255, 0.3)',
+        borderTop: '4px solid #fff',
+        borderRadius: '50%',
+        width: '40px',
+        height: '40px',
+        animation: 'spin 1s linear infinite'
+    }}></div>
 );
 
 const AccordionItem = ({ user }) => {
@@ -19,38 +22,32 @@ const AccordionItem = ({ user }) => {
 
   return (
     <>
-      <tr onClick={() => setIsOpen(!isOpen)} className="hover:bg-gray-700/50 cursor-pointer">
-        <td className="px-6 py-4 whitespace-nowrap font-medium">
-          <div className="flex items-center">
-            <span className={`mr-2 transform transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}>▶</span>
+      <tr onClick={() => setIsOpen(!isOpen)} style={{ cursor: 'pointer', background: isOpen ? '#004a8c' : 'transparent' }}>
+        <td style={{ padding: '16px', whiteSpace: 'nowrap', fontWeight: '500' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ marginRight: '12px', transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▶</span>
             {user.name}
           </div>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap">{user.lessonsStarted} ta</td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <div className="flex items-center">
-            <div className="w-full bg-gray-600 rounded-full h-2.5 mr-2">
-              <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${user.averageProgress}%` }}></div>
-            </div>
-            <span className="font-semibold">{user.averageProgress}%</span>
-          </div>
+        <td style={{ padding: '16px', whiteSpace: 'nowrap', textAlign: 'center' }}>
+          {user.totalListens} marta
+        </td>
+        <td style={{ padding: '16px', whiteSpace: 'nowrap', textAlign: 'center' }}>
+          {user.lessons.length} ta
         </td>
       </tr>
       {isOpen && (
         <tr>
-          <td colSpan="3" className="px-6 py-4 bg-gray-800/50">
-            <div className="pl-8">
-              <h4 className="font-semibold text-gray-300 mb-2">Tinglangan darslar:</h4>
-              <ul className="space-y-3">
+          <td colSpan="3" style={{ padding: '16px 24px', background: 'rgba(0, 0, 0, 0.1)' }}>
+            <div style={{ paddingLeft: '28px' }}>
+              <h4 style={{ fontWeight: '600', marginBottom: '12px', color: '#ccc' }}>Batafsil statistika:</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {user.lessons.map((lesson, index) => (
                   <li key={index}>
-                    <p className="text-sm text-gray-200 truncate">{lesson.title}</p>
-                    <div className="flex items-center mt-1">
-                      <div className="w-full bg-gray-600 rounded-full h-1.5 mr-2">
-                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${lesson.progress}%` }}></div>
-                      </div>
-                      <span className="text-xs font-mono text-gray-400">{lesson.progress}%</span>
-                    </div>
+                    <p style={{ fontSize: '14px', color: '#fff', margin: 0 }}>{lesson.title}</p>
+                    <p style={{ fontSize: '12px', color: '#aaa', margin: '4px 0 0 0' }}>
+                      <strong>{lesson.count}</strong> marta tinglangan (oxirgisi: {lesson.lastDate || 'N/A'})
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -61,6 +58,7 @@ const AccordionItem = ({ user }) => {
     </>
   );
 };
+
 
 // ====================================================================
 // ASOSIY KOMPONENT
@@ -75,19 +73,14 @@ function App() {
     async function fetchStats() {
       try {
         const apiUrl = import.meta.env.VITE_API_URL;
-        if (!apiUrl) {
-          throw new Error("API URL manzili .env faylda ko'rsatilmagan!");
-        }
+        if (!apiUrl) throw new Error("API_URL topilmadi.");
         
         const response = await fetch(apiUrl);
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Server xatosi: ${response.status} ${response.statusText}. Batafsil: ${errorText}`);
-        }
+        if (!response.ok) throw new Error(`Server xatosi: ${response.status}`);
+        
         const data = await response.json();
         setStats(data);
       } catch (err) {
-        console.error("Ma'lumotlarni olishda xatolik:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -98,7 +91,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex justify-center items-center">
+      <div style={{ minHeight: '100vh', background: '#003a70', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <LoadingSpinner />
       </div>
     );
@@ -106,37 +99,40 @@ function App() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 flex justify-center items-center text-red-500 p-8">
-        <div className="text-center">
-          <p className="font-bold text-lg">Xatolik yuz berdi</p>
-          <p className="text-sm mt-2 font-mono bg-gray-800 p-4 rounded-md">{error}</p>
+      <div style={{ minHeight: '100vh', background: '#003a70', color: '#f87171', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '32px', textAlign: 'center' }}>
+        <div>
+          <p style={{ fontWeight: '700', fontSize: '1.125rem', marginBottom: '8px' }}>Xatolik yuz berdi!</p>
+          <p style={{ fontSize: '14px' }}>{error}</p>
         </div>
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">O'quvchilar Statistikasi</h1>
-        <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-          <table className="min-w-full">
-            <thead className="bg-gray-700">
+    <div style={{ minHeight: '100vh', background: '#003a70', color: '#e5e7eb', padding: '32px' }}>
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        tr:hover { background: #0059a9 !important; }
+      `}</style>
+      <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+            <h1 style={{ fontSize: '2.25rem', fontWeight: '700', color: 'white' }}>O'quvchilar Statistikasi</h1>
+        </div>
+        
+        <div style={{ background: '#0053a0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', borderRadius: '12px', overflow: 'hidden' }}>
+          <table style={{ minWidth: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ background: 'rgba(0, 58, 112, 0.5)' }}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">O'quvchi</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Boshlangan darslar</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">O'rtacha o'zlashtirish</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>O'quvchi</th>
+                <th style={{ padding: '12px 24px', textAlign: 'center', fontSize: '12px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Umumiy Tinglashlar</th>
+                <th style={{ padding: '12px 24px', textAlign: 'center', fontSize: '12px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Turli Darslar Soni</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700">
+            <tbody style={{ borderTop: '1px solid rgba(51, 117, 179, 0.3)' }}>
               {stats.length > 0 ? (
                 stats.map((user, index) => <AccordionItem key={index} user={user} />)
               ) : (
-                <tr>
-                  <td colSpan="3" className="text-center py-10 text-gray-400">
-                    Hozircha statistika mavjud emas.
-                  </td>
-                </tr>
+                <tr><td colSpan="3" style={{ textAlign: 'center', padding: '64px 0', color: '#9ca3af' }}>Hozircha statistika mavjud emas.</td></tr>
               )}
             </tbody>
           </table>
